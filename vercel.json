@@ -1,0 +1,16 @@
+{
+  "name": "backend",
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/server.js",
+      "use": "@vercel/static-build"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "src/api"
+    }
+  ]
+}
