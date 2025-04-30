@@ -6,10 +6,10 @@ import cookieParser from "cookie-parser";
 import morgan from "morgan";
 
 // Import routes
-import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import groceryRoutes from "./routes/groceryRoutes.js";
-import shoppingListRoutes from "./routes/shoppingListRoutes.js";
+import authRoutes from "./src/routes/authRoutes.js";
+import userRoutes from "./src/routes/userRoutes.js";
+import groceryRoutes from "./src/routes/groceryRoutes.js";
+import shoppingListRoutes from "./src/routes/shoppingListRoutes.js";
 
 // Load environment variables
 dotenv.config({ path: "./.env" });
