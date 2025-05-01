@@ -28,7 +28,7 @@ export const createGroceryItem = async (req, res, next) => {
 export const updateGroceryItem = async (req, res, next) => {
   try {
     const groceryItem = await GroceryItem.findByIdAndUpdate(
-      req.params.id,
+      req.params.itemId,
       req.body,
       { new: true }
     );
