@@ -11,6 +11,7 @@ import {
   deleteGrocery,
   getPreviousCarts,
   getLastGroceryItems,
+  getGroceryItemsAutofill,
 } from "../controllers/groceryController.js";
 
 const router = express.Router();
@@ -27,5 +28,7 @@ router.post("/new-grocery", createGrocery);
 router.get("/:id", getGroceryById);
 router.patch("/:id", updateGrocery);
 router.delete("/:id", deleteGrocery);
+
+router.get("/autofill/:query", getGroceryItemsAutofill);
 
 export default router;

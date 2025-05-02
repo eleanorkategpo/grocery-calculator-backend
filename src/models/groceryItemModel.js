@@ -33,6 +33,10 @@ const groceryItemSchema = new mongoose.Schema({
         ref: "User",
         required: true,
     },
+    dateAdded: {
+        type: Date,
+        default: Date.now,
+    },
 });
 
 

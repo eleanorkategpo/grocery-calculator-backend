@@ -12,7 +12,6 @@ const grocerySchema = new mongoose.Schema({
   },
   budget: {
     type: Number,
-    required: true,
   },
   createdAt: {
     type: Date,

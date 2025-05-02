@@ -65,6 +65,11 @@ export const getPreviousCarts = async (req, res, next) => {
         },
       },
       {
+        $match: {
+          "items.user": req.user._id,
+        },
+      },
+      {
         $group: {
           _id: "$_id",
           storeName: { $first: "$storeName" },
@@ -147,6 +152,19 @@ export const getLastGroceryItems = async (req, res, next) => {
       .sort({ createdAt: -1 })
       .limit(10);
     res.status(200).json({ status: "success", data: { lastGroceryItems } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//params: query
+export const getGroceryItemsAutofill = async (req, res, next) => {
+  try {
+    const groceryItems = await GroceryItem.find({
+      user: req.user._id,
+      description: { $regex: req.params.query, $options: "i" },
+    });
+    res.status(200).json({ status: "success", data: { groceryItems } });
   } catch (error) {
     next(error);
   }
