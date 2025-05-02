@@ -13,11 +13,13 @@ export const getGroceryItemsById = async (req, res, next) => {
 
 export const createGroceryItem = async (req, res, next) => {
   try {
+  
     const body = {
       ...req.body,
       groceryId: new mongoose.Types.ObjectId(req.body.groceryId),
       user: req.user._id,
     };
+    
     const groceryItem = await GroceryItem.create(body);
     res.status(201).json({ status: "success", data: { groceryItem } });
   } catch (error) {
@@ -78,6 +80,7 @@ export const getPreviousCarts = async (req, res, next) => {
           totalItems: { $sum: "$items.quantity" },
           items: { $push: "$items" },
           createdAt: { $first: "$createdAt" },
+          checkoutDate: { $first: "$checkoutDate" },
         },
       },
       {
@@ -137,6 +140,7 @@ export const updateGrocery = async (req, res, next) => {
 
 export const deleteGrocery = async (req, res, next) => {
   try {
+    await GroceryItem.deleteMany({ groceryId: req.params.id });
     await Grocery.findByIdAndDelete(req.params.id);
     res.status(204).json({ status: "success" });
   } catch (error) {
