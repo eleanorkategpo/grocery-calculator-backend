@@ -10,9 +10,14 @@ const shoppingListSchema = new mongoose.Schema({
   items: [
     {
       item: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "GroceryItem",
-        required: true
+        type: mongoose.Schema.Types.Mixed,
+        required: true,
+        validate: {
+          validator: (v) =>
+            // either a valid ObjectId or a plain string
+            mongoose.Types.ObjectId.isValid(v) || typeof v === "string",
+          message: "item must be either a GroceryItem ObjectId or a string"
+        }
       },
       checked: {
         type: Boolean,
@@ -20,9 +25,8 @@ const shoppingListSchema = new mongoose.Schema({
       },
       quantity: {
         type: Number,
-        default: 1,
+        default: 1
       },
-      
     },
   ],
 }, {

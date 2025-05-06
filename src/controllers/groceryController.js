@@ -1,5 +1,6 @@
 import Grocery from "../models/groceryModel.js";
 import GroceryItem from "../models/groceryItemModel.js";
+import ShoppingList from "../models/shoppingListModel.js";
 import mongoose from "mongoose";
 
 export const getGroceryItemsById = async (req, res, next) => {
@@ -136,8 +137,10 @@ export const deleteGrocery = async (req, res, next) => {
 
 export const getLastGroceryItems = async (req, res, next) => {
   try {
+    const shoppingList = await ShoppingList.findOne({ user: req.user._id }).lean();
     const lastGroceryItems = await GroceryItem.find({
       user: req.user._id,
+      _id: {$nin: shoppingList.items.map((item) => item.item)}
     })
       .sort({ createdAt: -1 })
       .limit(10);
