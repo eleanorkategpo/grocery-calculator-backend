@@ -9,12 +9,24 @@ const shoppingListSchema = new mongoose.Schema({
   },
   items: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "GroceryItem",
-      required: true,
+      item: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "GroceryItem",
+        required: true
+      },
+      checked: {
+        type: Boolean,
+        default: false
+      },
+      quantity: {
+        type: Number,
+        default: 1,
+      },
+      
     },
-    
   ],
+}, {
+  timestamps: true
 });
 
 const ShoppingList = mongoose.model("ShoppingList", shoppingListSchema);
