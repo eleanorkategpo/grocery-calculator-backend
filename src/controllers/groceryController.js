@@ -53,22 +53,8 @@ export const getPreviousCarts = async (req, res, next) => {
   try {
     const previousCarts = await Grocery.aggregate([
       {
-        $lookup: {
-          from: "groceryitems",
-          localField: "_id",
-          foreignField: "groceryId",
-          as: "items",
-        },
-      },
-      {
-        $unwind: {
-          path: "$items",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
         $match: {
-          "items.user": req.user._id,
+          user: req.user._id,
         },
       },
       {
