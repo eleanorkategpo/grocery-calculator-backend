@@ -58,7 +58,8 @@ export const addToShoppingList = async (req, res, next) => {
       let item = shoppingList.items.find(
         (item) => item.groceryItemId === groceryItemId
       );
-      if (item) {
+
+      if (groceryItemId && item) {
         item = {
           ...item,
           description: description,
@@ -67,7 +68,7 @@ export const addToShoppingList = async (req, res, next) => {
         await shoppingList.save();
       } else {
         shoppingList.items.push({
-          groceryItemId: groceryItemId,
+          groceryItemId: groceryItemId ?? null,
           description: description,
           quantity: quantity,
           price: price,
