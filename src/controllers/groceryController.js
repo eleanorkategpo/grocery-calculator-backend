@@ -155,10 +155,12 @@ export const deleteGrocery = async (req, res, next) => {
 
 export const getLastGroceryItems = async (req, res, next) => {
   try {
-    const shoppingList = await ShoppingList.findOne({ user: req.user._id }).lean();
+    const shoppingList = await ShoppingList.findOne({
+      user: req.user._id,
+    }).lean();
     const lastGroceryItems = await GroceryItem.find({
       user: req.user._id,
-      _id: {$nin: shoppingList.items.map((item) => item.item)}
+      _id: { $nin: shoppingList.items.map((item) => item.groceryItemId) },
     })
       .sort({ createdAt: -1 })
       .limit(10);

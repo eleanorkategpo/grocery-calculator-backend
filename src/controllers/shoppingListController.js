@@ -1,11 +1,13 @@
 import ShoppingList from "../models/shoppingListModel.js";
 import AppError from "../utils/appError.js";
-import { v4 as uuidv4 } from "uuid";
+import GroceryItem from "../models/groceryItemModel.js";
 
 // Get user's shopping list
 export const getShoppingList = async (req, res, next) => {
   try {
-    let shoppingList = await ShoppingList.findOne({ user: req.user._id });
+    const shoppingList = await ShoppingList.findOne({
+      user: req.user._id,
+    }).lean();
 
     if (!shoppingList) {
       shoppingList = await ShoppingList.create({
@@ -14,8 +16,17 @@ export const getShoppingList = async (req, res, next) => {
       });
     }
 
-    // Populate the items from the GroceryItem collection
-    await shoppingList.populate("items");
+    const items = await GroceryItem.find({
+      _id: {
+        $in: shoppingList.items.map((item) => item.groceryItemId),
+      },
+    }).lean();
+    shoppingList.items = shoppingList.items.map((item) => ({
+      ...items.find(
+        (i) => i._id?.toString() === item.groceryItemId?.toString()
+      ),
+      ...item,
+    }));
 
     res.status(200).json({
       status: "success",
