@@ -162,8 +162,8 @@ export const getLastGroceryItems = async (req, res, next) => {
       user: req.user._id,
       _id: { $nin: shoppingList.items.map((item) => item.groceryItemId) },
     })
-      .sort({ createdAt: -1 })
-      .limit(10);
+      .sort({ createdAt: -1 });
+      
     res.status(200).json({ status: "success", data: { lastGroceryItems } });
   } catch (error) {
     next(error);
