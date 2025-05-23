@@ -5,7 +5,6 @@ import {
   removeFromShoppingList,
   updateShoppingList,
   clearShoppingList,
-  updateItem,
 } from "../controllers/shoppingListController.js";
 import { protect } from "../controllers/authController.js";
 
@@ -16,8 +15,9 @@ router.use(protect);
 router.get("/", getShoppingList);
 router.post("/add", addToShoppingList);
 router.delete("/remove/:itemId", removeFromShoppingList);
-router.patch("/update", updateShoppingList);
+// Update entire list (batch)
+router.patch("/update-item/:itemId", updateShoppingList);
+// Clear the shopping list
 router.post("/clear", clearShoppingList);
-router.patch("/update-item/:itemId", updateItem);
 
 export default router;

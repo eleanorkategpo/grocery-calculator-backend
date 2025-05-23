@@ -14,13 +14,12 @@ export const getGroceryItemsById = async (req, res, next) => {
 
 export const createGroceryItem = async (req, res, next) => {
   try {
-  
     const body = {
       ...req.body,
       groceryId: new mongoose.Types.ObjectId(req.body.groceryId),
       user: req.user._id,
     };
-    
+
     const groceryItem = await GroceryItem.create(body);
     res.status(201).json({ status: "success", data: { groceryItem } });
   } catch (error) {
@@ -53,6 +52,25 @@ export const deleteGroceryItem = async (req, res, next) => {
 export const getPreviousCarts = async (req, res, next) => {
   try {
     const previousCarts = await Grocery.aggregate([
+      {
+        $match: {
+          user: req.user._id,
+        },
+      },
+      {
+        $lookup: {
+          from: "groceryitems",
+          localField: "_id",
+          foreignField: "groceryId",
+          as: "items",
+        },
+      },
+      {
+        $unwind: {
+          path: "$items",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       {
         $match: {
           user: req.user._id,
@@ -153,10 +171,23 @@ export const getLastGroceryItems = async (req, res, next) => {
 //params: query
 export const getGroceryItemsAutofill = async (req, res, next) => {
   try {
-    const groceryItems = await GroceryItem.find({
-      user: req.user._id,
-      description: { $regex: req.params.query, $options: "i" },
-    });
+    const groceryItems = await GroceryItem.aggregate([
+      {
+        $match: {
+          user: req.user._id,
+          description: { $regex: req.params.query, $options: "i" },
+        },
+      },
+      {
+        $group: {
+          _id: "$barcode",
+          count: { $sum: 1 },
+          doc: { $first: "$$ROOT" },
+        },
+      },
+      { $match: { count: 1 } },
+      { $replaceRoot: { newRoot: "$doc" } },
+    ]);
     res.status(200).json({ status: "success", data: { groceryItems } });
   } catch (error) {
     next(error);

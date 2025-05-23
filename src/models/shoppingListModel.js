@@ -1,37 +1,42 @@
 import mongoose from "mongoose";
-import { v4 as uuidv4 } from "uuid";
 
-const shoppingListSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true
-  },
-  items: [
-    {
-      item: {
-        type: mongoose.Schema.Types.Mixed,
-        required: true,
-        validate: {
-          validator: (v) =>
-            // either a valid ObjectId or a plain string
-            mongoose.Types.ObjectId.isValid(v) || typeof v === "string",
-          message: "item must be either a GroceryItem ObjectId or a string"
-        }
-      },
-      checked: {
-        type: Boolean,
-        default: false
-      },
-      quantity: {
-        type: Number,
-        default: 1
-      },
+const shoppingListSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-  ],
-}, {
-  timestamps: true
-});
+    items: [
+      {
+        groceryItemId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "GroceryItem",
+        },
+        description: {
+          type: String,
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+          default: 1,
+        },
+        price: {
+          type: Number,
+          default: 0,
+        },
+        checked: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
+  },
+  {
+    timestamps: true,
+  }
+);
 
 const ShoppingList = mongoose.model("ShoppingList", shoppingListSchema);
 

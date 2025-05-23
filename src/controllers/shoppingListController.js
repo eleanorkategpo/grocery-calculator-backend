@@ -1,27 +1,27 @@
 import ShoppingList from "../models/shoppingListModel.js";
-import GroceryItem from "../models/groceryItemModel.js";
 import AppError from "../utils/appError.js";
-import mongoose from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 
 // Get user's shopping list
 export const getShoppingList = async (req, res, next) => {
   try {
-    //fetch shopping list and items from GroceryItem collection
-    const shoppingList = await ShoppingList.findOne({ user: req.user._id }).lean();
-    const items = await GroceryItem.find({
-      _id: {
-        $in: shoppingList.items.map((item) => item.item),
-      },
-    }).lean();
-    shoppingList.items = shoppingList.items.map((item) => ({
-      ...items.find((i) => i._id.toString() === item.item.toString()),
-      quantity: item.quantity,
-      checked: item.checked,
-    }));
+    let shoppingList = await ShoppingList.findOne({ user: req.user._id });
+
+    if (!shoppingList) {
+      shoppingList = await ShoppingList.create({
+        user: req.user._id,
+        items: [],
+      });
+    }
+
+    // Populate the items from the GroceryItem collection
+    await shoppingList.populate("items");
 
     res.status(200).json({
       status: "success",
-      data: { ...shoppingList },
+      data: {
+        items: shoppingList.items || [],
+      },
     });
   } catch (error) {
     next(error);
@@ -31,31 +31,36 @@ export const getShoppingList = async (req, res, next) => {
 // Add item to shopping list
 export const addToShoppingList = async (req, res, next) => {
   try {
-    const { itemId } = req.body;
-    const id = new mongoose.Types.ObjectId(itemId);
-
-    if (!id) {
-      return next(new AppError("Item ID is required", 400));
-    }
-
-    // Check if the item exists
-    const item = await GroceryItem.findById(id);
-    if (!item) {
-      return next(new AppError("Item not found", 404));
-    }
-
+    const { description, quantity, groceryItemId, price } = req.body;
     // Find the user's shopping list or create one
     let shoppingList = await ShoppingList.findOne({ user: req.user._id });
-
     if (!shoppingList) {
       shoppingList = await ShoppingList.create({
         user: req.user._id,
-        items: [{ item: id, checked: false, quantity: 1 }],
+        items: [...shoppingList.items, req.body],
       });
-    } else {
-      // Check if the item already exists in the list
-      if (!shoppingList.items.some((item) => item.item.toString() === id)) {
-        shoppingList.items.push({ item: id, checked: false, quantity: 1 });
+    }
+
+    if (!shoppingList.items) shoppingList.items = [];
+    else {
+      //check if item already exists in the shopping list
+      let item = shoppingList.items.find(
+        (item) => item.groceryItemId === groceryItemId
+      );
+      if (item) {
+        item = {
+          ...item,
+          description: description,
+          quantity: quantity,
+        };
+        await shoppingList.save();
+      } else {
+        shoppingList.items.push({
+          groceryItemId: groceryItemId,
+          description: description,
+          quantity: quantity,
+          price: price,
+        });
         await shoppingList.save();
       }
     }
@@ -85,7 +90,7 @@ export const removeFromShoppingList = async (req, res, next) => {
 
     // Remove the item from the list
     shoppingList.items = shoppingList.items.filter(
-      (item) => item.toString() !== itemId
+      (item) => item._id.toString() !== itemId
     );
 
     await shoppingList.save();
@@ -104,11 +109,7 @@ export const removeFromShoppingList = async (req, res, next) => {
 // Update shopping list (for batch operations)
 export const updateShoppingList = async (req, res, next) => {
   try {
-    const { items } = req.body;
-
-    if (!items || !Array.isArray(items)) {
-      return next(new AppError("Items array is required", 400));
-    }
+    const { itemId } = req.params;
 
     // Find the user's shopping list
     let shoppingList = await ShoppingList.findOne({ user: req.user._id });
@@ -121,7 +122,25 @@ export const updateShoppingList = async (req, res, next) => {
     }
 
     // Update the items
-    shoppingList.items = items;
+    shoppingList.items =
+      shoppingList.items.length > 0
+        ? shoppingList.items.map((item) => {
+            if (item?.groceryItemId?.toString() === itemId) {
+              return {
+                ...item,
+                quantity: req.body.quantity,
+                description: req.body.description,
+              };
+            }
+            return item;
+          })
+        : [
+            {
+              groceryItemId: itemId,
+              quantity: req.body.quantity,
+              description: req.body.description,
+            },
+          ];
     await shoppingList.save();
 
     res.status(200).json({
@@ -154,38 +173,6 @@ export const clearShoppingList = async (req, res, next) => {
       data: {
         message: "Shopping list cleared",
       },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const updateItem = async (req, res, next) => {
-  try {
-    const { itemId } = req.params;
-    const { checked, quantity } = req.body;
-
-    const shoppingList = await ShoppingList.findOne({ user: req.user._id });
-
-    if (!shoppingList) {
-      return next(new AppError("Shopping list not found", 404));
-    }
-    const item = shoppingList.items.find((item) => item.item.toString() === itemId);
-
-    if (!item) {
-      return next(new AppError("Item not found", 404));
-    }
-    if (checked !== undefined) {
-      item.checked = checked;
-    }
-    if (quantity !== undefined) {
-      item.quantity = quantity;
-    }
-    await shoppingList.save();
-
-    res.status(200).json({
-      status: "success",
-      data: { message: "Item updated" },
     });
   } catch (error) {
     next(error);
