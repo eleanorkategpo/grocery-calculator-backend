@@ -3,7 +3,6 @@ const groceryItemSchema = new mongoose.Schema({
     barcode: {
         type: String,
         required: true,
-        unique: true,
     },
     description: {  
         type: String,
