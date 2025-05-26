@@ -29,8 +29,8 @@ export const createGroceryItem = async (req, res, next) => {
 
 export const updateGroceryItem = async (req, res, next) => {
   try {
-    const groceryItem = await GroceryItem.findByIdAndUpdate(
-      req.params.itemId,
+    const groceryItem = await GroceryItem.findOneAndUpdate(
+      { _id: req.params.itemId },
       req.body,
       { new: true }
     );
@@ -42,7 +42,7 @@ export const updateGroceryItem = async (req, res, next) => {
 
 export const deleteGroceryItem = async (req, res, next) => {
   try {
-    await GroceryItem.findByIdAndDelete(req.params.id);
+    await GroceryItem.findByIdAndDelete(req.params.itemId);
     res.status(204).json({ status: "success" });
   } catch (error) {
     next(error);
@@ -161,9 +161,8 @@ export const getLastGroceryItems = async (req, res, next) => {
     const lastGroceryItems = await GroceryItem.find({
       user: req.user._id,
       _id: { $nin: shoppingList.items.map((item) => item.groceryItemId) },
-    })
-      .sort({ createdAt: -1 });
-      
+    }).sort({ createdAt: -1 });
+
     res.status(200).json({ status: "success", data: { lastGroceryItems } });
   } catch (error) {
     next(error);
