@@ -28,6 +28,16 @@ export const getShoppingList = async (req, res, next) => {
       ...item,
     }));
 
+    //remove duplicate ids
+    shoppingList.items = shoppingList.items.filter(
+      (item, index, self) =>
+        index === self.findIndex((t) => t.groceryItemId === item.groceryItemId)
+    );
+    //sort by description
+    shoppingList.items.sort((a, b) =>
+      a.description?.localeCompare(b.description)
+    );
+
     res.status(200).json({
       status: "success",
       data: {
@@ -124,7 +134,9 @@ export const updateShoppingList = async (req, res, next) => {
     const { itemId } = req.params;
 
     // Find the user's shopping list
-    let shoppingList = await ShoppingList.findOne({ user: req.user._id });
+    let shoppingList = await ShoppingList.findOne({
+      user: req.user._id,
+    }).lean();
 
     if (!shoppingList) {
       shoppingList = await ShoppingList.create({
@@ -133,27 +145,48 @@ export const updateShoppingList = async (req, res, next) => {
       });
     }
 
-    // Update the items
-    shoppingList.items =
-      shoppingList.items.length > 0
-        ? shoppingList.items.map((item) => {
-            if (item?.groceryItemId?.toString() === itemId) {
-              return {
-                ...item,
-                quantity: req.body.quantity,
-                description: req.body.description,
-              };
-            }
-            return item;
-          })
-        : [
-            {
-              groceryItemId: itemId,
-              quantity: req.body.quantity,
-              description: req.body.description,
-            },
-          ];
-    await shoppingList.save();
+    const index = shoppingList.items.findIndex(
+      (item) => item._id.toString() === itemId
+    );
+    const item = shoppingList.items[index];
+
+    // // Update the items
+    // let updatedItems =
+    //   shoppingList.items.length > 0
+    //     ? shoppingList.items.map((item) => {
+    //         if (item?._id?.toString() === itemId) {
+    //           return {
+    //             ...item,
+    //             quantity: req.body.quantity,
+    //             description: req.body.description,
+    //             checked: req.body.checked ?? false,
+    //           };
+    //         }
+    //         return item;
+    //       })
+    //     : [
+    //         {
+    //           groceryItemId: itemId,
+    //           quantity: req.body.quantity,
+    //           description: req.body.description,
+    //           checked: req.body.checked ?? false,
+    //         },
+    //       ];
+    await ShoppingList.findOneAndUpdate(
+      { _id: shoppingList._id },
+      {
+        $set: {
+          [`items.${index}`]: {
+            ...item,
+            groceryItemId: itemId,
+            quantity: req.body.quantity ?? item.quantity,
+            description: req.body.description ?? item.description,
+            checked: req.body.checked ?? false,
+          },
+        },
+      },
+      { new: true }
+    );
 
     res.status(200).json({
       status: "success",
